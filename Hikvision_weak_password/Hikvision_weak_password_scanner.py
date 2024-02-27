@@ -3,11 +3,11 @@
 import sys
 import requests
 import threading
-import Queue
+import queue
 
 def login():
-    username=raw_input("please enter your username:")
-    password=raw_input("please enter your password:")
+    username=input("please enter your username:")
+    password=input("please enter your password:")
     login_info={
         'username':username,
         'password':password
@@ -23,7 +23,7 @@ def login():
 def search(access_token):
     cam_name="Hikvision Network Video Recorder http admin"
     authorization = {'Authorization': 'JWT ' + access_token["access_token"]}
-    host_queue=Queue.Queue()
+    host_queue=queue.Queue()
     page_num=int(input("Please enter the number of pages you need to scan:"))
     for page in range(1,page_num+1): 
         try:
@@ -53,17 +53,16 @@ def verify_vuln_cam(host_queue,result_file):
 
 def get_search_result(host_queue):
     thread_list=[]
-    thread_num=input("Please enter the number of threads:")
+    thread_num=int(input("Please enter the number of threads:"))
     print("Scan start...")
-    result_file=open("vuln_cam.txt","w")
-    for x in range(0,int(thread_num)):
-        th=threading.Thread(target=verify_vuln_cam,args=(host_queue,result_file))
-        thread_list.append(th)
-    for t in thread_list:
-        t.start()
-    for t in thread_list:
-        t.join()
-    result_file.close()
+    with open("vuln_cam.txt","w") as result_file:
+        for x in range(0,thread_num):
+            th=threading.Thread(target=verify_vuln_cam,args=(host_queue,result_file), daemon=True)
+            thread_list.append(th)
+        for t in thread_list:
+            t.start()
+        for t in thread_list:
+            t.join()
     print("Scan completed!")
 
 
@@ -73,3 +72,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+    
